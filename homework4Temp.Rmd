@@ -1,0 +1,45 @@
+---
+title: "COSTOMER INSURANCE"
+author: "Alain Kuiete"
+date: "11/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# cost.ins$INCOME <- as.numeric(gsub("[\\$,]", "", cost.ins$INCOME))
+# head(cost.ins$INCOME)
+# summary(cost.ins$INCOME)
+```
+
+
+```{r}
+# cost.ins$HOME_VAL <- as.numeric(gsub("[\\$,]", "", cost.ins$HOME_VAL))
+# head(cost.ins$HOME_VAL)
+# summary(cost.ins$HOME_VAL)
+```
+
+
+
+```{r}
+# cost.ins$BLUEBOOK <- as.numeric(gsub("[\\$,]", "", cost.ins$BLUEBOOK))
+# head(cost.ins$BLUEBOOK)
+# summary(cost.ins$BLUEBOOK)
+```
+
+
+```{r}
+# cost.ins$OLDCLAIM <- as.numeric(gsub("[\\$,]", "", cost.ins$OLDCLAIM))
+# head(cost.ins$OLDCLAIM)
+# summary(cost.ins$OLDCLAIM)
+```
+
+
+
+2. glmmPQL MASS package
+3. glmer of lme4 package
+4. inla of INLA package

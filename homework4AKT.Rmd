@@ -1,0 +1,489 @@
+---
+title: "Homework 4"
+author: "Alain Kuiete"
+date: "11/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+## DATA EXPLORATION
+
+```{r}
+auto.insurance <- read.csv('insurance_training_data.csv')
+head(auto.insurance)
+```
+
+```{r}
+str(auto.insurance)
+```
+
+
+```{r} 
+summary(auto.insurance)
+```
+
+```{r}
+cost.ins <- auto.insurance
+#attach(cost.ins)
+```
+
+### Univariate Study
+#### Histogram of some variables
+We divide the variable in two groups to study
+
+
+
+
+```{r}
+library(DataExplorer)
+var.group1 <-data.frame(TARGET_AMT, KIDSDRIV, AGE, HOMEKIDS, YOJ, TRAVTIME, TIF, CLM_FREQ, 
+                        MVR_PTS, CAR_AGE, EDUCATION, CAR_TYPE)
+plot_histogram(var.group1, ggtheme = theme_light())
+```
+
+```{r}
+ggplot(cost.ins, aes(x=EDUCATION)) + geom_bar()
+```
+
+```{r}
+ggplot(cost.ins, aes(CAR_TYPE)) + geom_bar()
+```
+
+```{r}
+ggplot(cost.ins, aes(x=TARGET_AMT)) + geom_histogram()
+```
+
+#### Transforming to categorical variables
+```{r}
+cost.ins$TARGET_FLAG <- factor(cost.ins$TARGET_FLAG, labels = c("NO","YES"))
+cost.ins$HOMEKIDS <- factor(cost.ins$HOMEKIDS, labels = c("HK1", "HK2", "HK3", "HK4", "HK5", "HK6"))
+cost.ins$CLM_FREQ <- factor(cost.ins$CLM_FREQ, labels = c("CF1", "CF2", "CF3", "CF4", "CF5", "CF6"))
+#cost.ins$KIDSDRIV <- factor(cost.ins$KIDSDRIV)
+summary(cost.ins)
+```
+
+```{r}
+str(cost.ins)
+```
+
+
+```{r}
+ggplot(cost.ins, aes(x=TARGET_FLAG, y=TARGET_AMT)) + geom_boxplot()
+```
+
+### Bivariate Study
+
+## DATA PREPARETION
+
+
+
+
+```{r}
+
+```
+
+#### Remove $ sign on INCOME, HOME_VAL, BLUEBOOK, and OLDCLAIM
+
+```{r}
+dollar.sign <- function(a){
+  a <- as.numeric(gsub("[\\$,]", "", a))
+  return(a)
+}
+cost.ins$INCOME <- dollar.sign(INCOME)
+cost.ins$HOME_VAL <- dollar.sign(HOME_VAL)
+cost.ins$BLUEBOOK <-  dollar.sign(BLUEBOOK)
+cost.ins$OLDCLAIM <- dollar.sign(OLDCLAIM)
+```
+
+```{r}
+var.group2 <- data.frame(INCOME = cost.ins$INCOME,
+                         HOME_VAL = cost.ins$HOME_VAL, 
+                         BLUEBOOK = cost.ins$BLUEBOOK, 
+                         OLDCLAIM = cost.ins$OLDCLAIM )
+summary(var.group2)
+attach(cost.ins)
+```
+
+```{r}
+cor(var.group2[complete.cases(var.group2),] )
+```
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+plot_histogram(var.group2, ggtheme = theme_light())
+```
+
+
+
+
+
+#### Looking for correlations between variables
+```{r}
+income.group <- data.frame(INCOME, EDUCATION, JOB, HOME_VAL, CAR_TYPE, BLUEBOOK, HOMEKIDS, RED_CAR, URBANICITY)
+
+```
+
+```{r}
+ggplot(income.group, aes(x=INCOME, y=BLUEBOOK, color = JOB)) + geom_point() + facet_grid(rows = vars(URBANICITY), cols = vars(EDUCATION))
+```
+There exist relative  correlation between some categorical variables. We see that in urban like in rural area, blue collar are for les than high school or more, people with bachelor and master have professional, manager and some home maker jobs, With PhD, someone is likely to be Home Maker, Doctor or Clerical
+
+
+
+
+```{r}
+ggplot(income.group, aes(x=BLUEBOOK, y=HOME_VAL, color = CAR_TYPE)) + geom_point() + facet_grid(rows = vars(JOB), cols = vars(EDUCATION))
+```
+
+```{r}
+ggplot(income.group, aes(x=CAR_AGE, y=BLUEBOOK, color = JOB)) + geom_point()
+```
+
+
+```{r}
+ggplot(cost.ins, aes(x=TIF, y=YOJ, color = JOB)) + geom_point()
+```
+
+
+#### Missing Values in AGE , INCOME, HOME_VAL, YOJ, and CAR_AGE
+The mice package in R, helps you imputing missing values with plausible data values. 
+These plausible values are drawn from a distribution specifically designed for each missing datapoint.
+
+Here we going to form a data frame with only varibles that have missing values
+```{r}
+ins.missing <- data.frame(AGE, INCOME, HOME_VAL, CAR_AGE, YOJ)
+```
+The mice package provides a nice function md.pattern() to get a better understanding of the pattern of missing data
+
+
+```{r}
+library(mice)
+md.pattern(ins.missing)
+```
+There are 6448 row with no missing values. 510 missing in CAR_AGE, 464 missing in HOME_VAL, 
+454 samples miss in YOJ (Year of JOB), 445 samplea miss in INCOME, and 6 samples miss in AGE
+
+
+
+```{r}
+library(VIM)
+aggr_plot <- aggr(ins.missing, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE, labels=names(ins.missing), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"))
+```
+
+The plot helps us understanding that almost 90% of the samples are not missing any information, 6% are missing the CAR_AGE, and the remaining ones show other missing patterns.
+
+
+```{r}
+temp.ins <- mice(ins.missing,m=5,maxit=50,meth='rf',seed=123)
+```
+
+```{r}
+summary(temp.ins)
+```
+
+```{r}
+completed.ins <- complete(temp.ins, 1)
+```
+
+```{r}
+summary(completed.ins)
+```
+
+```{r}
+str(completed.ins)
+```
+
+
+```{r}
+costomers.insurance <- cbind(cost.ins[,-c(1, 5, 7, 8, 10, 25)], completed.ins)
+str(costomers.insurance)
+```
+
+```{r}
+summary(costomers.insurance)
+```
+
+
+
+
+## BUILD MODELS
+### Split the data into train and test set
+```{r}
+library(caret)
+set.seed(25)
+inTraining <- createDataPartition(costomers.insurance$TARGET_AMT, p = .75, list = FALSE)
+training <- costomers.insurance[ inTraining,-1]
+testing  <- costomers.insurance[-inTraining,-1]
+```
+
+
+### Build Models with the trainset using k-10 fold
+#### Multiple Linear Model
+Linear regression using:
+1. caret package
+```{r}
+fitControl <- trainControl(## 10-fold CV
+  method = "repeatedcv",
+  number = 3,
+  ## repeated ten times
+  repeats = 10)
+
+
+set.seed(25)
+gbmFit1 <- train(TARGET_AMT ~ ., data = training, 
+                 method = "gbm", 
+                 trControl = fitControl,
+                 ## This last option is actually one
+                 ## for gbm() that passes through
+                 verbose = FALSE)
+gbmFit1
+
+```
+Selecting models
+```{r}
+plot(gbmFit1)
+```
+
+
+
+
+GBM model
+```{r}
+# gbmGrid <-  expand.grid(interaction.depth = c(1, 5, 9), 
+#                         n.trees = (1:30)*50, 
+#                         shrinkage = 0.1,
+#                         n.minobsinnode = 20)
+#                         
+# nrow(gbmGrid)
+# 
+# set.seed(25)
+# gbmFit2 <- train(TARGET_AMT ~ ., data = training, 
+#                  method = "gbm", 
+#                  trControl = fitControl, 
+#                  verbose = FALSE, 
+#                  ## Now specify the exact models 
+#                  ## to evaluate:
+#                  tuneGrid = gbmGrid)
+# gbmFit2
+```
+
+4. Partial Lesat Square
+```{r}
+set.seed(25)
+fitControl <- trainControl(
+  method = "repeatedcv",
+  classProbs = FALSE,
+  repeats = 3,
+  preProc = c("center", "scale"))
+
+plsFit1 <- train(TARGET_AMT~., data=training, method = "pls", 
+                 tuneLength=15, metric="RMSE", 
+                 trControl=fitControl)
+plsFit1
+```
+
+
+
+5. Using step function
+```{r}
+step.lmod <- lm(TARGET_AMT ~ ., data = training)
+step.lmod <- step(step.lmod, trace = FALSE)
+```
+
+
+
+```{r}
+summary(step.lmod)
+```
+
+
+```{r}
+predictor.importance <-  varImp(step.lmod)
+predictor.importance
+```
+Most important predictors are UBANICITY, MVR_PTS, MSTATUS, CAR_USE, CAR_TYPE, TIF, TRAVTIME, KIDSDRIVKD, REVOKED, CAR_AGE, PARENT1, INCOME, AGE, HOME_VAL, 
+
+
+
+
+6. rlm from MASS package
+We use the Huber weigth parameter
+```{r}
+library(MASS)
+rr.huber <- rlm(TARGET_AMT ~ KIDSDRIV + PARENT1 + MSTATUS + JOB + 
+    TRAVTIME + CAR_USE + TIF + CAR_TYPE + REVOKED + MVR_PTS + 
+    URBANICITY + AGE + INCOME + HOME_VAL + CAR_AGE, data = training)
+rr.huber
+```
+
+```{r}
+sqrt(mean(rr.huber$residuals^2)) 
+```
+
+
+```{r}
+library(leaps)
+sub.models <- regsubsets(TARGET_AMT~., data = training, method = "exhaustive", nvmax = 32)
+rs <- summary(sub.models)
+rs$which
+```
+
+
+Examine model further - list outputs available with names() :
+```{r}
+best.summary <- summary(sub.models)
+names(best.summary)
+```
+
+Explore model with lowest RSS and highest R-squared:
+```{r}
+which.min(best.summary$rss)
+which.max(best.summary$adjr2)
+which.min(best.summary$bic)
+```
+
+
+
+
+
+
+
+
+#### Binary Logistic Regression
+### Split the data into train and test set
+
+
+
+
+```{r}
+library(caret)
+set.seed(25)
+inTraining <- createDataPartition(costomers.insurance$TARGET_AMT, p = .75, list = FALSE)
+training <- costomers.insurance[ inTraining,-2]
+testing  <- costomers.insurance[-inTraining,-2]
+```
+
+1. glm logit and probit
+```{r}
+logitFit <- glm(TARGET_FLAG ~ KIDSDRIV + PARENT1 + MSTATUS + JOB + 
+    TRAVTIME + CAR_USE + TIF + CAR_TYPE + REVOKED + MVR_PTS + 
+    URBANICITY + AGE + INCOME + HOME_VAL + CAR_AGE, family = binomial(link = "logit"), data = cost.ins)
+logitFit
+```
+
+
+
+Selecting models
+2. GBM with tuning parameters
+```{r}
+fitControl <- trainControl(method = "repeatedcv",
+                           number = 5,
+                           repeats = 3,
+                           ## Estimate class probabilities
+                           classProbs = TRUE,
+                           ## Evaluate performance using 
+                           ## the following function
+                           summaryFunction = twoClassSummary)
+
+set.seed(25)
+gbmFit3 <- train(TARGET_FLAG~ ., data = training, 
+                 method = "gbm", 
+                 trControl = fitControl, 
+                 verbose = FALSE, 
+                 tuneGrid = gbmGrid,
+                 ## Specify which metric to optimize
+                 metric = "ROC")
+gbmFit3
+```
+
+
+```{r}
+whichTwoPct <- tolerance(gbmFit3$results, metric = "ROC", 
+                         tol = 2, maximize = FALSE)  
+cat("best model within 2 pct of best:\n")
+```
+
+```{r}
+gbmFit3$results[whichTwoPct,1:6]
+```
+
+
+Between Models
+Support Vector Machine is fit to the training set
+```{r}
+set.seed(25)
+svmFit <- train(TARGET_FLAG ~ ., data = training, 
+                 method = "svmRadial", 
+                 trControl = fitControl, 
+                 preProc = c("center", "scale"),
+                 tuneLength = 8,
+                 metric = "ROC")
+svmFit                 
+```
+
+
+Discriminant Analysis is fit 
+```{r}
+set.seed(25)
+rdaFit <- train(TARGET_FLAG ~ ., data = training, 
+                 method = "rda", 
+                 trControl = fitControl, 
+                 tuneLength = 4,
+                 metric = "ROC")
+rdaFit             
+```
+
+Statistical Statements on the models perfomances
+
+Resampling Results
+```{r}
+resamps <- resamples(list(GBM = gbmFit3,
+                          SVM = svmFit,
+                          RDA = rdaFit))
+resamps
+```
+
+Visualizing the resampling distribution
+```{r}
+theme1 <- trellis.par.get()
+theme1$plot.symbol$col = rgb(.2, .2, .2, .4)
+theme1$plot.symbol$pch = 16
+theme1$plot.line$col = rgb(1, 0, 0, .7)
+theme1$plot.line$lwd <- 2
+trellis.par.set(theme1)
+bwplot(resamps, layout = c(3, 1))
+```
+
+```{r}
+trellis.par.set(caretTheme())
+dotplot(resamps, metric = "ROC")
+```
+
+```{r}
+splom(resamps)
+```
+
+Since models are fit on the same versions of the training data, it makes sense to make inferences on the differences between models. In this way we reduce the within-resample correlation that may exist. We can compute the differences, then use a simple t-test to evaluate the null hypothesis that there is no difference between models.
+
+```{r}
+difValues <- diff(resamps)
+difValues
+```
+
+
+
+
+
+
+
