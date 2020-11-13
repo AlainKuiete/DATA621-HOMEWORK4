@@ -2,7 +2,9 @@
 title: "Homework 4"
 author: "Alain Kuiete"
 date: "11/5/2020"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -11,25 +13,99 @@ library(ggplot2)
 ```
 
 ## DATA EXPLORATION
-
 ```{r}
 auto.insurance <- read.csv('insurance_training_data.csv')
 head(auto.insurance)
+#write.csv(head(auto.insurance), "head_insurance_data.csv")
 ```
 
-```{r}
-str(auto.insurance)
-```
-
-
-```{r} 
-summary(auto.insurance)
-```
 
 ```{r}
 cost.ins <- auto.insurance
 #attach(cost.ins)
 ```
+
+
+```{r}
+evaluation <- read.csv("insurance-evaluation-data.csv")
+str(evaluation)
+```
+
+#### Remove $ sign on INCOME, HOME_VAL, BLUEBOOK, and OLDCLAIM
+
+```{r}
+dollar.sign <- function(a){
+  a <- as.numeric(gsub("[\\$,]", "", a))
+  return(a)
+}
+cost.ins$INCOME <- dollar.sign(cost.ins$INCOME)
+cost.ins$HOME_VAL <- dollar.sign(cost.ins$HOME_VAL)
+cost.ins$BLUEBOOK <-  dollar.sign(cost.ins$BLUEBOOK)
+cost.ins$OLDCLAIM <- dollar.sign(cost.ins$OLDCLAIM)
+summary(cost.ins)
+write.csv(summary(cost.ins), "summary_data.csv")
+```
+### Evaluation
+```{r}
+evaluation$INCOME <- dollar.sign(evaluation$INCOME)
+evaluation$HOME_VAL <- dollar.sign(evaluation$HOME_VAL)
+evaluation$BLUEBOOK <-  dollar.sign(evaluation$BLUEBOOK)
+evaluation$OLDCLAIM <- dollar.sign(evaluation$OLDCLAIM)
+summary(evaluation)
+```
+
+
+#### Transforming to categorical variables
+
+```{r}
+cost.ins$TARGET_FLAG <- factor(cost.ins$TARGET_FLAG, labels = c("NO","YES"))
+cost.ins$HOMEKIDS <- factor(cost.ins$HOMEKIDS, labels = c("HK1", "HK2", "HK3", "HK4", "HK5", "HK6"))
+cost.ins$CLM_FREQ <- factor(cost.ins$CLM_FREQ, labels = c("CF1", "CF2", "CF3", "CF4", "CF5", "CF6"))
+#cost.ins$KIDSDRIV <- factor(cost.ins$KIDSDRIV)
+cost.ins$URBANICITY <- ifelse(cost.ins$URBANICITY=="Highly Urban/ Urban", "U","R")
+cost.ins$MSTATUS <- ifelse(cost.ins$MSTATUS=="Yes", "1","0")
+cost.ins$SEX <- ifelse(cost.ins$SEX=="M", "1","0")
+cost.ins$CAR_USE <-  ifelse(cost.ins$CAR_USE=="Private", "1","0")
+cost.ins$EDUCATION <- ifelse(cost.ins$EDUCATION=="<High School","1HS",
+                             ifelse(cost.ins$EDUCATION=="z_High School","2HS",
+                                    ifelse(cost.ins$EDUCATION=="Bachelors","3BA",
+                                           ifelse(cost.ins$EDUCATION=="Masters","4MA","5PH"))))
+#cost.ins$JOB[cost.ins$JOB==""] <- "UNEMPLOY"
+summary(cost.ins)
+```
+```{r}
+head(cost.ins)
+```
+
+### Evaluation
+
+
+```{r}
+#evaluation$TARGET_FLAG <- factor(evaluation$TARGET_FLAG, labels = c("NO","YES"))
+evaluation$HOMEKIDS <- factor(evaluation$HOMEKIDS, labels = c("HK1", "HK2", "HK3", "HK4", "HK5", "HK6"))
+evaluation$CLM_FREQ <- factor(evaluation$CLM_FREQ, labels = c("CF1", "CF2", "CF3", "CF4", "CF5", "CF6"))
+#cost.ins$KIDSDRIV <- factor(cost.ins$KIDSDRIV)
+evaluation$URBANICITY <- ifelse(evaluation$URBANICITY=="Highly Urban/ Urban", "U","R")
+evaluation$MSTATUS <- ifelse(evaluation$MSTATUS=="Yes", "1","0")
+evaluation$SEX <- ifelse(evaluation$SEX=="M", "1","0")
+evaluation$CAR_USE <-  ifelse(evaluation$CAR_USE=="Private", "1","0")
+evaluation$EDUCATION <- ifelse(evaluation$EDUCATION=="<High School","1HS",
+                             ifelse(evaluation$EDUCATION=="z_High School","2HS",
+                                    ifelse(evaluation$EDUCATION=="Bachelors","3BA",
+                                           ifelse(evaluation$EDUCATION=="Masters","4MA","5PH"))))
+#cost.ins$JOB[cost.ins$JOB==""] <- "UNEMPLOY"
+summary(evaluation)
+```
+
+
+
+```{r}
+attach(cost.ins)
+str(cost.ins)
+```
+
+
+
 
 ### Univariate Study
 #### Histogram of some variables
@@ -40,8 +116,8 @@ We divide the variable in two groups to study
 
 ```{r}
 library(DataExplorer)
-var.group1 <-data.frame(TARGET_AMT, KIDSDRIV, AGE, HOMEKIDS, YOJ, TRAVTIME, TIF, CLM_FREQ, 
-                        MVR_PTS, CAR_AGE, EDUCATION, CAR_TYPE)
+var.group1 <-data.frame(TARGET_AMT, KIDSDRIV, AGE, YOJ, INCOME, HOME_VAL, TRAVTIME, TIF, 
+                        OLDCLAIM, BLUEBOOK, MVR_PTS, CAR_AGE)
 plot_histogram(var.group1, ggtheme = theme_light())
 ```
 
@@ -54,17 +130,10 @@ ggplot(cost.ins, aes(CAR_TYPE)) + geom_bar()
 ```
 
 ```{r}
-ggplot(cost.ins, aes(x=TARGET_AMT)) + geom_histogram()
+ggplot(cost.ins, aes(x=TARGET_AMT)) + geom_histogram(binwidth = 4000)
 ```
 
-#### Transforming to categorical variables
-```{r}
-cost.ins$TARGET_FLAG <- factor(cost.ins$TARGET_FLAG, labels = c("NO","YES"))
-cost.ins$HOMEKIDS <- factor(cost.ins$HOMEKIDS, labels = c("HK1", "HK2", "HK3", "HK4", "HK5", "HK6"))
-cost.ins$CLM_FREQ <- factor(cost.ins$CLM_FREQ, labels = c("CF1", "CF2", "CF3", "CF4", "CF5", "CF6"))
-#cost.ins$KIDSDRIV <- factor(cost.ins$KIDSDRIV)
-summary(cost.ins)
-```
+
 
 ```{r}
 str(cost.ins)
@@ -86,56 +155,22 @@ ggplot(cost.ins, aes(x=TARGET_FLAG, y=TARGET_AMT)) + geom_boxplot()
 
 ```
 
-#### Remove $ sign on INCOME, HOME_VAL, BLUEBOOK, and OLDCLAIM
-
-```{r}
-dollar.sign <- function(a){
-  a <- as.numeric(gsub("[\\$,]", "", a))
-  return(a)
-}
-cost.ins$INCOME <- dollar.sign(INCOME)
-cost.ins$HOME_VAL <- dollar.sign(HOME_VAL)
-cost.ins$BLUEBOOK <-  dollar.sign(BLUEBOOK)
-cost.ins$OLDCLAIM <- dollar.sign(OLDCLAIM)
-```
-
-```{r}
-var.group2 <- data.frame(INCOME = cost.ins$INCOME,
-                         HOME_VAL = cost.ins$HOME_VAL, 
-                         BLUEBOOK = cost.ins$BLUEBOOK, 
-                         OLDCLAIM = cost.ins$OLDCLAIM )
-summary(var.group2)
-attach(cost.ins)
-```
-
-```{r}
-cor(var.group2[complete.cases(var.group2),] )
-```
 
 
 ```{r}
 
 ```
-
-
-
-
-```{r}
-plot_histogram(var.group2, ggtheme = theme_light())
-```
-
-
 
 
 
 #### Looking for correlations between variables
 ```{r}
-income.group <- data.frame(INCOME, EDUCATION, JOB, HOME_VAL, CAR_TYPE, BLUEBOOK, HOMEKIDS, RED_CAR, URBANICITY)
+income.group <- data.frame(INCOME, EDUCATION, JOB, HOME_VAL, CAR_TYPE, BLUEBOOK, HOMEKIDS, RED_CAR, URBANICITY, TRAVTIME, REVOKED, CAR_USE, CLM_FREQ, OLDCLAIM, MVR_PTS)
 
 ```
 
 ```{r}
-ggplot(income.group, aes(x=INCOME, y=BLUEBOOK, color = JOB)) + geom_point() + facet_grid(rows = vars(URBANICITY), cols = vars(EDUCATION))
+ggplot(income.group, aes(x=log(INCOME), y=log(BLUEBOOK), color = JOB)) + geom_point(position = position_jitter(), alpha=.3) + facet_grid(rows = vars(URBANICITY), cols = vars(EDUCATION))
 ```
 There exist relative  correlation between some categorical variables. We see that in urban like in rural area, blue collar are for les than high school or more, people with bachelor and master have professional, manager and some home maker jobs, With PhD, someone is likely to be Home Maker, Doctor or Clerical
 
@@ -143,11 +178,11 @@ There exist relative  correlation between some categorical variables. We see tha
 
 
 ```{r}
-ggplot(income.group, aes(x=BLUEBOOK, y=HOME_VAL, color = CAR_TYPE)) + geom_point() + facet_grid(rows = vars(JOB), cols = vars(EDUCATION))
+ggplot(income.group, aes(x=MVR_PTS, y=log(TARGET_AMT), color = CLM_FREQ)) + geom_point() + facet_grid(cols = vars(REVOKED))
 ```
 
 ```{r}
-ggplot(income.group, aes(x=CAR_AGE, y=BLUEBOOK, color = JOB)) + geom_point()
+ggplot(income.group, aes(x=log(INCOME), y=log(TARGET_AMT), color = JOB)) + geom_point() + facet_grid(rows = vars(URBANICITY), cols = vars(EDUCATION))
 ```
 
 
@@ -157,7 +192,7 @@ ggplot(cost.ins, aes(x=TIF, y=YOJ, color = JOB)) + geom_point()
 
 
 #### Missing Values in AGE , INCOME, HOME_VAL, YOJ, and CAR_AGE
-The mice package in R, helps you imputing missing values with plausible data values. 
+Missing Values in AGE , INCOME, HOME_VAL, YOJ, and CAR_AGEThe mice package in R, helps you imputing missing values with plausible data values. 
 These plausible values are drawn from a distribution specifically designed for each missing datapoint.
 
 Here we going to form a data frame with only varibles that have missing values
@@ -168,8 +203,14 @@ The mice package provides a nice function md.pattern() to get a better understan
 
 
 ```{r}
+ins.missing.eva <- data.frame(AGE = evaluation$AGE, INCOME = evaluation$INCOME, HOME_VAL= evaluation$HOME_VAL, CAR_AGE = evaluation$CAR_AGE, YOJ= evaluation$YOJ)
+```
+
+
+```{r}
 library(mice)
 md.pattern(ins.missing)
+write.csv(md.pattern(ins.missing),"missing_data.csv")
 ```
 There are 6448 row with no missing values. 510 missing in CAR_AGE, 464 missing in HOME_VAL, 
 454 samples miss in YOJ (Year of JOB), 445 samplea miss in INCOME, and 6 samples miss in AGE
@@ -189,6 +230,12 @@ temp.ins <- mice(ins.missing,m=5,maxit=50,meth='rf',seed=123)
 ```
 
 ```{r}
+temp.ins.eva <-mice(ins.missing.eva,m=5,maxit=50,meth='rf',seed=123)
+```
+
+
+
+```{r}
 summary(temp.ins)
 ```
 
@@ -197,7 +244,13 @@ completed.ins <- complete(temp.ins, 1)
 ```
 
 ```{r}
+completed.ins.eva <- complete(temp.ins.eva,1)
+```
+
+
+```{r}
 summary(completed.ins)
+write.csv(summary(completed.ins), "imputed_data.csv")
 ```
 
 ```{r}
@@ -211,23 +264,44 @@ str(costomers.insurance)
 ```
 
 ```{r}
+costomers.insurance.eva <- cbind(evaluation[,-c(1, 5, 7, 8, 10, 25)], completed.ins.eva)
+str(costomers.insurance.eva)
+```
+
+
+```{r}
 summary(costomers.insurance)
 ```
 
 
 
 
-## BUILD MODELS
+
+
+
+
+
+Missing Values in JOB
+Detecting the missing values
+```{r}
+#levels(cost.ins$JOB)
+#cost.ins$JOB[cost.ins$JOB==""]
+```
+
+
+
+
+
 ### Split the data into train and test set
 ```{r}
 library(caret)
 set.seed(25)
 inTraining <- createDataPartition(costomers.insurance$TARGET_AMT, p = .75, list = FALSE)
-training <- costomers.insurance[ inTraining,-1]
-testing  <- costomers.insurance[-inTraining,-1]
+training <- costomers.insurance[ inTraining,]
+testing  <- costomers.insurance[-inTraining,]
 ```
 
-
+## BUILD MODELS
 ### Build Models with the trainset using k-10 fold
 #### Multiple Linear Model
 Linear regression using:
@@ -250,35 +324,47 @@ gbmFit1 <- train(TARGET_AMT ~ ., data = training,
 gbmFit1
 
 ```
+
+```{r}
+summary(gbmFit1)
+write.csv(summary(gbmFit1), "gbmFit1_varimp.csv")
+```
+
+
+
+
 Selecting models
 ```{r}
 plot(gbmFit1)
+
 ```
 
 
-
+##### Classification
 
 GBM model
 ```{r}
-# gbmGrid <-  expand.grid(interaction.depth = c(1, 5, 9), 
-#                         n.trees = (1:30)*50, 
-#                         shrinkage = 0.1,
-#                         n.minobsinnode = 20)
-#                         
-# nrow(gbmGrid)
-# 
-# set.seed(25)
-# gbmFit2 <- train(TARGET_AMT ~ ., data = training, 
-#                  method = "gbm", 
-#                  trControl = fitControl, 
-#                  verbose = FALSE, 
-#                  ## Now specify the exact models 
-#                  ## to evaluate:
-#                  tuneGrid = gbmGrid)
-# gbmFit2
+gbmGrid <-  expand.grid(interaction.depth = c(1, 5, 9),
+                        n.trees = (1:30)*50,
+                        shrinkage = 0.1,
+                        n.minobsinnode = 20)
+
+nrow(gbmGrid)
+
+set.seed(25)
+gbmFit2 <- train(TARGET_AMT ~ ., data = training,
+                 method = "gbm",
+                 trControl = fitControl,
+                 verbose = FALSE,
+                 ## Now specify the exact models
+                 ## to evaluate:
+                 tuneGrid = gbmGrid)
+gbmFit2
 ```
 
-4. Partial Lesat Square
+
+
+2. Partial Lesat Square
 ```{r}
 set.seed(25)
 fitControl <- trainControl(
@@ -294,8 +380,17 @@ plsFit1
 ```
 
 
+```{r}
+plsFit1$results
+write.csv(plsFit1$results, "plsFit1_result.csv")
+```
 
-5. Using step function
+```{r}
+plsFit1
+```
+
+
+3. Using step function
 ```{r}
 step.lmod <- lm(TARGET_AMT ~ ., data = training)
 step.lmod <- step(step.lmod, trace = FALSE)
@@ -309,26 +404,35 @@ summary(step.lmod)
 
 
 ```{r}
+
+```
+
+
+```{r}
 predictor.importance <-  varImp(step.lmod)
 predictor.importance
+write.csv(predictor.importance, "predictor_imp.csv")
 ```
 Most important predictors are UBANICITY, MVR_PTS, MSTATUS, CAR_USE, CAR_TYPE, TIF, TRAVTIME, KIDSDRIVKD, REVOKED, CAR_AGE, PARENT1, INCOME, AGE, HOME_VAL, 
 
 
 
 
-6. rlm from MASS package
+4. rlm from MASS package
 We use the Huber weigth parameter
 ```{r}
 library(MASS)
 rr.huber <- rlm(TARGET_AMT ~ KIDSDRIV + PARENT1 + MSTATUS + JOB + 
     TRAVTIME + CAR_USE + TIF + CAR_TYPE + REVOKED + MVR_PTS + 
-    URBANICITY + AGE + INCOME + HOME_VAL + CAR_AGE, data = training)
+    URBANICITY + AGE + INCOME+ HOME_VAL + CAR_AGE, data = training)
 rr.huber
 ```
 
 ```{r}
 sqrt(mean(rr.huber$residuals^2)) 
+```
+```{r}
+summary(rr.huber)
 ```
 
 
@@ -354,17 +458,8 @@ which.min(best.summary$bic)
 ```
 
 
-
-
-
-
-
-
 #### Binary Logistic Regression
 ### Split the data into train and test set
-
-
-
 
 ```{r}
 library(caret)
@@ -378,15 +473,45 @@ testing  <- costomers.insurance[-inTraining,-2]
 ```{r}
 logitFit <- glm(TARGET_FLAG ~ KIDSDRIV + PARENT1 + MSTATUS + JOB + 
     TRAVTIME + CAR_USE + TIF + CAR_TYPE + REVOKED + MVR_PTS + 
-    URBANICITY + AGE + INCOME + HOME_VAL + CAR_AGE, family = binomial(link = "logit"), data = cost.ins)
+    URBANICITY + AGE + log(INCOME) + HOME_VAL + CAR_AGE, family = binomial(link = "logit"), data = cost.ins)
 logitFit
 ```
+
+
+```{r}
+length(testing$KIDSDRIV)
+```
+
+
+```{r}
+library(caret)
+pred <- predict(logitFit, newdata = testing[,-1], type = "response")
+predicted <- as.factor(ifelse(pred>=.5,"YES","NO"))
+cm <- confusionMatrix(data = predicted, testing$TARGET_FLAG, positive = 'YES')
+write.csv(cm$table, "confusion_matrix_table.csv")
+write.csv(cm$byClass, "confusion_matrix_metrics.csv")
+cm$byClass
+```
+
+
+```{r}
+metric.logit <- logitFit
+```
+
 
 
 
 Selecting models
 2. GBM with tuning parameters
 ```{r}
+
+gbmGrid <-  expand.grid(interaction.depth = c(1, 5, 9),
+                        n.trees = (1:30)*50,
+                        shrinkage = 0.1,
+                        n.minobsinnode = 20)
+
+nrow(gbmGrid)
+
 fitControl <- trainControl(method = "repeatedcv",
                            number = 5,
                            repeats = 3,
@@ -415,7 +540,8 @@ cat("best model within 2 pct of best:\n")
 ```
 
 ```{r}
-gbmFit3$results[whichTwoPct,1:6]
+best.model <- gbmFit3$results[whichTwoPct,1:6]
+write.csv(best.model, "best.model.csv")
 ```
 
 
@@ -471,6 +597,13 @@ dotplot(resamps, metric = "ROC")
 ```
 
 ```{r}
+trellis.par.set(theme1)
+xyplot(resamps, what = "BlandAltman")
+```
+
+
+
+```{r}
 splom(resamps)
 ```
 
@@ -481,9 +614,95 @@ difValues <- diff(resamps)
 difValues
 ```
 
+## Using the whole training set
+```{r}
+
+gbmGrid <-  expand.grid(interaction.depth = c(1, 5, 9),
+                        n.trees = (1:30)*50,
+                        shrinkage = 0.1,
+                        n.minobsinnode = 20)
+
+nrow(gbmGrid)
+
+fitControl <- trainControl(method = "repeatedcv",
+                           number = 10,
+                           repeats = 10,
+                           ## Estimate class probabilities
+                           classProbs = TRUE,
+                           ## Evaluate performance using 
+                           ## the following function
+                           summaryFunction = twoClassSummary)
+
+set.seed(25)
+gbmFit4 <- train(TARGET_FLAG~ ., data = costomers.insurance[,-2], 
+                 method = "gbm", 
+                 trControl = fitControl, 
+                 verbose = FALSE, 
+                 tuneGrid = gbmGrid,
+                 ## Specify which metric to optimize
+                 metric = "ROC")
+
+```
+
+```{r}
+pred
+```
+
+
+#### Metrics
+```{r}
+pred <- predict(rdaFit, newdata = testing[,-1], type = "raw")
+#predicted <- as.factor(ifelse(pred>=.5,"YES","NO"))
+cm <- confusionMatrix(data = pred, testing$TARGET_FLAG, positive = 'YES')
+write.csv(cm$table, "confusion_matrix_table6.csv")
+write.csv(cm$byClass, "confusion_matrix_metrics6.csv")
+cm$byClass
+```
 
 
 
 
+
+
+
+## Making prediction
+
+
+
+
+```{r}
+evaluated <- predict(gbmFit4, newdata = evaluation, type ="prob")
+head(evaluated)
+write.csv(evaluated, "evaluated_insurance.csv")
+```
+
+
+```{r}
+predicted.ins.eva <-  predict(gbmFit4, newdata = costomers.insurance.eva)
+summary(predicted.ins.eva)
+```
+
+
+```{r}
+to.predict <- read.csv("insurance-evaluation-data.csv")
+predict.insur <- cbind(to.predict[,-2], TARGET_FLAG = predicted.ins.eva )
+head(predict.insur)
+```
+
+
+
+### Amount of Insurance
+
+```{r}
+amount <- predict(gbmFit1, newdata =costomers.insurance.eva )
+target.amount <- ifelse(prediction.insurance$TARGET_FLAG=="NO",0 ,amount)
+predict.insur <- cbind(predict.insur, TARGET_AMT = target.amount )
+head(predict.insur)
+
+```
+
+```{r}
+write.csv(predict.insur, "insurance_evaluation.csv")
+```
 
 

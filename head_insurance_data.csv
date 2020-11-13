@@ -1,0 +1,7 @@
+"","INDEX","TARGET_FLAG","TARGET_AMT","KIDSDRIV","AGE","HOMEKIDS","YOJ","INCOME","PARENT1","HOME_VAL","MSTATUS","SEX","EDUCATION","JOB","TRAVTIME","CAR_USE","BLUEBOOK","TIF","CAR_TYPE","RED_CAR","OLDCLAIM","CLM_FREQ","REVOKED","MVR_PTS","CAR_AGE","URBANICITY"
+"1",1,0,0,0,60,0,11,"$67,349","No","$0","z_No","M","PhD","Professional",14,"Private","$14,230",11,"Minivan","yes","$4,461",2,"No",3,18,"Highly Urban/ Urban"
+"2",2,0,0,0,43,0,11,"$91,449","No","$257,252","z_No","M","z_High School","z_Blue Collar",22,"Commercial","$14,940",1,"Minivan","yes","$0",0,"No",0,1,"Highly Urban/ Urban"
+"3",4,0,0,0,35,1,10,"$16,039","No","$124,191","Yes","z_F","z_High School","Clerical",5,"Private","$4,010",4,"z_SUV","no","$38,690",2,"No",3,10,"Highly Urban/ Urban"
+"4",5,0,0,0,51,0,14,"","No","$306,251","Yes","M","<High School","z_Blue Collar",32,"Private","$15,440",7,"Minivan","yes","$0",0,"No",0,6,"Highly Urban/ Urban"
+"5",6,0,0,0,50,0,NA,"$114,986","No","$243,925","Yes","z_F","PhD","Doctor",36,"Private","$18,000",1,"z_SUV","no","$19,217",2,"Yes",3,17,"Highly Urban/ Urban"
+"6",7,1,2946,0,34,1,12,"$125,301","Yes","$0","z_No","z_F","Bachelors","z_Blue Collar",46,"Commercial","$17,430",1,"Sports Car","no","$0",0,"No",0,7,"Highly Urban/ Urban"
